@@ -1,4 +1,5 @@
 import number_convertor
+import sys
 
 __g_path_to_file = "./example.txt"
 
@@ -14,8 +15,12 @@ def get_file_content(path_to_file: str) -> str:
         return content
 
 
-def main() -> None:
-    content = get_file_content(__g_path_to_file)
+def main(argv: list) -> None:
+    if len(argv) > 1:
+        path_to_file = argv[1]
+    else:
+        path_to_file = __g_path_to_file
+    content = get_file_content(path_to_file)
     print(f"Исходный текст:\n{content}")
     convertor = number_convertor.NumberConvertor()
     numbered_text = convertor.convert_groups(content)
@@ -23,4 +28,4 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    main(sys.argv)

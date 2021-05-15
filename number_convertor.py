@@ -46,6 +46,27 @@ class NumberConvertor:
                                    r"\b(триллион(ами|а|у|ом|ов)?)\b": 10 ** 12,
                                    r"\b(триллиард(ами|а|у|ом|ов)?)\b": 10 ** 15,
                                    }
+        self.__multipliers = [10 ** 3, 10 ** 6, 10 ** 9, 10 ** 12, 10 ** 15]
+
+    def __create_group(self, numbers_list: list) -> int:
+        group = 0
+        sub_groups = []
+        has_multiplier = False
+        for number in numbers_list:
+            if len(sub_groups) == 0:
+                sub_groups.append(number)
+            else:
+                if number in self.__multipliers:
+                    sub_groups[len(sub_groups) - 1] *= number
+                    has_multiplier = True
+                elif not has_multiplier and number < sub_groups[len(sub_groups) - 1]:
+                    sub_groups[len(sub_groups) - 1] += number
+                else:
+                    sub_groups.append(number)
+                    has_multiplier = False
+        for sub_group in sub_groups:
+            group += sub_group
+        return group
 
     # Замена прописных цифр числами
     def convert(self, text: str) -> str:
@@ -64,15 +85,12 @@ class NumberConvertor:
         matches = list(re.finditer(r"\b(\d+)\b", text))
         pattern = re.compile(r"\S")
         start = 0
-        shift = 0  # Накаплеваемое смещение при замене текста цифрами
-        group = 0
+        shift = 0  # Накапливаемое смещение при замене текста цифрами
+        numbers_group = []
         is_group = False
         for i in range(len(matches)):
             if is_group:
-                if group < int(matches[i].group(0)):
-                    group *= int(matches[i].group(0))
-                else:
-                    group += int(matches[i].group(0))
+                numbers_group.append(int(matches[i].group(0)))
             if i != len(matches) - 1:
                 chars_between = "".join(
                     text[j] for j in range(matches[i].end(0) - shift, matches[i + 1].start(0) - shift))
@@ -81,13 +99,14 @@ class NumberConvertor:
             if chars_between and len(list(pattern.finditer(chars_between))) == 0:
                 if not is_group:
                     is_group = True
-                    group += int(matches[i].group(0))
+                    numbers_group.append(int(matches[i].group(0)))
                     start = matches[i].start(0) - shift
             else:
                 is_group = False
                 end = matches[i].end(0) - shift
-                if group != 0:
+                if len(numbers_group) != 0:
+                    group = self.__create_group(numbers_group)
                     text = text[:start] + str(group) + text[end:]
                     shift += end - start - len(str(group))
-                    group = 0
+                    numbers_group.clear()
         return text

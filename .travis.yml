@@ -1,0 +1,17 @@
+language: python
+python:
+  - "3.6"
+  - "3.7"
+  - "3.8"
+  - "3.9"
+install:
+  - pip install -r requirements.txt
+addons:
+  sonarcloud:
+    organization: "cemepka"
+    token: $SONAR_TOKEN
+script:
+  # the following command line builds the project, runs the tests with coverage and then execute the SonarCloud analysis
+  - sonar-scanner
+  - pytest
+  
